@@ -1,62 +1,215 @@
-# helios
 
-- Sommaire 
+# Spring-Helios
 
-- Project
-  - client
-    - description
-      - Module ayant pour but de sécuriser la resources en filrtant et verifirant la validaté d'un token d'autorisation d'une requete http entrante.
-      - Principalement utilisé lorsque que la gestion Oauth2 et utilisateur est délégué à un serveur helios externe.
-        - configuration :
-          application:
-          token-provider:
-          jwt:
-          jwtSecret: "secretsecretsecretsecretsecretsecretsecretsecret"
-    - dependency
-  - core
-    - description
-    - dependency
-  - jpa
-      - description
-      - dependency
-  - oauth2
-      - description
-      - dependency
-- Getting Started
-- Integrate with your tools
-  - docker compose
-- RoadMap
-- Support
+This project's aim is to simplify the management of an all-in-one registration/connection service.
+This service is self-configured and implemented using Oauth2 and OpenId Connect without any required configuration. Despite this, all modules can still be customized.
+Integration is possible with either an application or a micro-services architecture.
 
-➜  ~ postgres -D /usr/local/var/postgres
+## helios-client-spring-boot-starter
+Secure the resource by filtering and verifying the authorization token for an incoming HTTP request.
+It is primarily utilized when an external server is responsible for delegating Oauth2 and user management.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-client-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
 
 
-## Integrate with your tools
+## helios-core-spring-boot-starter
+Contains all the interfaces to be implemented, DTO models, and constants. It can be used to redefine the main services for registration and user manipulations.
 
-- [ ] [Set up project integrations](https://gitlab.com/saezsebastien/helios/-/settings/integrations)
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-core-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
+
+## helios-jpa-spring-boot-starter
+Provides a default JPA implementation to manipulate and store users.
+
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-jpa-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
+
+## helios-oauth2-spring-boot-starter
+Configures Oauth2 and OpenId Connect authentication for an application. The modules module helios-core-spring-boot-starter and helios-client-spring-boot-starter are embedded.
+
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-oauth2-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
 
 
+## Getting Started
+### Client side only
+The [helios-client-spring-boot-starter](#helios-client-spring-boot-starter) module aims to make token validation process easier by providing components to interact with them. The authorization token of HTTP entrant requests can be validated through autoconfiguration.
 
-## Name
-Choose a self-explaining name for your project.
+This module is not mandatory, you can design your own services and behaviors to manage incoming tokens.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+#### Maven depency
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-client-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
+
+#### Define the JWT secret.
+```properties
+application.token-provider.jwt.jwtSecret=ur_jwtsecret
+```
+
+
+#### It's important to exclude UserDetailsServiceAutoConfiguration.class when using the client.
+```java
+@SpringBootApplication(exclude= {UserDetailsServiceAutoConfiguration.class})
+```
+
+#### To enable the default HeliosClientAutoConfiguration
+```java
+@Import(HeliosClientAutoConfiguration.class)
+```
+
+
+### Server side
+As a reminder [Helios](#helios-oauth2-spring-boot-starter) aims to provide an all-in-one solution to facilitate the management of Oauth2/OpenId Connect in your environment. The steps to configure an application called server, which will handle authentication and user management, are listed below.
+
+By default, two auto-configurations are activated
+- HeliosOauth2AutoConfiguration
+- HeliosOauth2WebSecurity
+
+#### Maven dependency
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-oauth2-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
+
+#### Required properties
+```properties
+application.token-provider.jwt.jwtSecret=test
+application.token-provider.jwt.expiration=test
+```
+
+#### Optional - Required configuration to enable default controller
+```java
+@Import(HeliosController.class)
+```
+
+No implementation for handling and saving usernames has been defined. Two options are available for this
+
+#### 1 - Enable [default JPA implementation](helios-jpa-spring-boot-starter)
+#### Maven dependency
+```xml
+<dependency>
+    <groupId>com.s3b</groupId>
+    <artifactId>helios-jpa-spring-boot-starter</artifactId>
+    <version>${version}</version>
+</dependency>
+```
+
+#### Required configuration
+To define database connection
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://host:port/databse
+    username: 
+    password:
+    jpa:
+        properties:
+        hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+```
+
+#### To set up the users database.
+```yaml
+spring:
+  sql:
+    init:
+      mode: always
+  jpa:
+    defer-datasource-initialization: true
+```
+
+
+#### To disable hibernate ddl-auto.
+```yaml
+spring:
+    jpa:
+      hibernate:
+        ddl-auto: none
+```
+
+#### To enable Oauth2.
+```yaml
+spring:
+    security:
+        oauth2:
+            client:
+                registration:
+                    google:
+                        client-id: 
+                        client-secret:
+```
+
+#### To enable JPA configuration
+```java
+@EnableJpaRepositories(basePackageClasses = {DefaultHeliosRepository.class})
+@EntityScan(basePackageClasses = {HeliosUserEntity.class})
+@SpringBootApplication
+```
+
+#### 2 - Define your own implementation
+The following interfaces must be implemented to define your own implementation.
+- HeliosRegisterService (User registration interface)
+- HeliosUserService (Interface for managing users)
+
+## How to use
+- **To sign up, you must go to** : /oauth2/authorization/google
+- After a successful login, you will be redirected to the defined page (home page by default), with a **token** as query parameter.
+##### The redirect page is defined by the query parameter **'redirect_uri'**.
+- e.g : oauth2/authorization/google?redirect_uri=url_to_redirect
+
 
 ## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- Docker support
+- Add more integrations
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+
+## Feedback
+If you have any feedback, please reach out to us at sebastien.saez.dev@gmail.com
+
+## Authors
+
+- [@Sébastien SAEZ](https://github.com/NTB3S)
+
+
+
+
+
+
+
+
+
+
+
+
+

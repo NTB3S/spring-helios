@@ -37,7 +37,7 @@ public class HeliosOauth2AutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(HeliosTokenWriter.class)
     public HeliosTokenWriter jwtTokenWriter(@Value("${application.token-provider.jwt.jwtSecret}") String jwtSecret,
-                                            @Value("${application.token-provider.jwt.expiration}}") int expirationTimeInHours){
+                                            @Value("${application.token-provider.jwt.expiration}") int expirationTimeInHours){
         log.info("HeliosTokenProvider implementation is missing, the default one will be create");
         return new DefaultHeliosJwtTokenWriter(jwtSecret, expirationTimeInHours);
     }
