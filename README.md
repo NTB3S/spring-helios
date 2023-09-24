@@ -113,7 +113,7 @@ application.token-provider.jwt.expiration=test
 @Import(HeliosController.class)
 ```
 
-No implementation for handling and saving usernames has been defined. Two options are available for this
+### No implementation for handling and saving usernames has been defined. Two options are available for this
 
 #### 1 - Enable [default JPA implementation](helios-jpa-spring-boot-starter)
 #### Maven dependency
